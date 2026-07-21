@@ -35,6 +35,8 @@
 
 ## 👍 Acknowledgement
 
+We thank the contributors of [MedEvalKit](https://github.com/alibaba-damo-academy/MedEvalKit) and [Medmarks](https://github.com/MedARC-AI/Medmarks) for their valuable contributions to medical AI evaluation. Their open-source efforts in organizing and standardizing medical benchmarks have greatly facilitated reproducible research and inspired the development of HealthCoreBench.
+
 ## 🤝 Contributors
 
 <a href="https://github.com/PKU-YuanGroup/OpenS2V-Nexus/graphs/contributors">
