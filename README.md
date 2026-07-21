@@ -1,5 +1,55 @@
+[English](README.md) | [中文](README_zh.md)
+
 # HealthCoreBench
 
-> This is just the beginning of this journey, and we will keep expanding it in the future!
+> [!NOTE]
+> HealthCoreBench serves as a practical extension of [Awesome-AI4Med](https://github.com/FreedomIntelligence/Awesome-AI4Med), transforming its broad resource curation into a curated, executable benchmark evaluation framework for medical AI systems. This is just the beginning of this journey, and we will keep expanding it in the future!
 
-HealthCoreBench serves as a practical extension of [Awesome-AI4Med](https://github.com/FreedomIntelligence/Awesome-AI4Med), transforming its broad resource curation into a curated, executable benchmark evaluation framework for medical AI systems.
+[![arXiv](https://img.shields.io/badge/Arxiv-2606.07962-b31b1b.svg?logo=arXiv)](https://arxiv.org/abs/2606.07962)
+[![hf_space](https://img.shields.io/badge/🤗-ChronoPhyBench-blue.svg)](https://huggingface.co/datasets/Kohsin/ChronoPhyBench)
+
+[![][github-release-shield]][github-release-link]
+[![][github-contributors-shield]][github-contributors-link]
+[![][github-forks-shield]][github-forks-link]
+[![][github-stars-shield]][github-stars-link]
+[![][github-issues-shield]][github-issues-link]
+
+[🌐Website](https://opencompass.org.cn/) |
+[📖CompassHub](https://hub.opencompass.org.cn/home) |
+[📊CompassRank](https://rank.opencompass.org.cn/home) |
+[📘Documentation](https://opencompass.readthedocs.io/en/latest/) |
+[🛠️Installation](https://opencompass.readthedocs.io/en/latest/get_started/installation.html) |
+[🤔Reporting Issues](https://github.com/open-compass/opencompass/issues/new/choose)
+
+## 💡 News
+
+## ⚙️ Quick Start
+
+## 📧 Contact
+
+## 📝 Citation
+
+## 👍 Acknowledgement
+
+## 🤝 Contributors
+
+<a href="https://github.com/PKU-YuanGroup/OpenS2V-Nexus/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=PKU-YuanGroup/OpenS2V-Nexus&anon=true" />
+</a>
+
+[github-contributors-link]: https://github.com/open-compass/opencompass/graphs/contributors
+[github-contributors-shield]: https://img.shields.io/github/contributors/open-compass/opencompass?color=c4f042&labelColor=black&style=flat-square
+[github-forks-link]: https://github.com/open-compass/opencompass/network/members
+[github-forks-shield]: https://img.shields.io/github/forks/open-compass/opencompass?color=8ae8ff&labelColor=black&style=flat-square
+[github-issues-link]: https://github.com/open-compass/opencompass/issues
+[github-issues-shield]: https://img.shields.io/github/issues/open-compass/opencompass?color=ff80eb&labelColor=black&style=flat-square
+[github-license-link]: https://github.com/open-compass/opencompass/blob/main/LICENSE
+[github-license-shield]: https://img.shields.io/github/license/open-compass/opencompass?color=white&labelColor=black&style=flat-square
+[github-release-link]: https://github.com/open-compass/opencompass/releases
+[github-release-shield]: https://img.shields.io/github/v/release/open-compass/opencompass?color=369eff&labelColor=black&logo=github&style=flat-square
+[github-releasedate-link]: https://github.com/open-compass/opencompass/releases
+[github-releasedate-shield]: https://img.shields.io/github/release-date/open-compass/opencompass?labelColor=black&style=flat-square
+[github-stars-link]: https://github.com/open-compass/opencompass/stargazers
+[github-stars-shield]: https://img.shields.io/github/stars/open-compass/opencompass?color=ffcb47&labelColor=black&style=flat-square
+[github-trending-shield]: https://trendshift.io/api/badge/repositories/6630
+[github-trending-url]: https://trendshift.io/repositories/6630
