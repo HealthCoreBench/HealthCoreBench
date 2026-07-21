@@ -21,6 +21,8 @@
 [🛠️Installation](https://opencompass.readthedocs.io/en/latest/get_started/installation.html) |
 [🤔Reporting Issues](https://github.com/open-compass/opencompass/issues/new/choose)
 
+#### 🌟 Highlights
+
 ## 💡 News
 
 ## ⚙️ Quick Start
