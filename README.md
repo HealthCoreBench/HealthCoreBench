@@ -15,6 +15,8 @@
 [![][github-stars-shield]][github-stars-link]
 [![][github-issues-shield]][github-issues-link]
 
+ ![](https://github.com/WangRongsheng/CareGPT/blob/main/assets/images/hx.png?raw=true)
+
 #### 🌟 Highlights
 
 ## 💡 News
