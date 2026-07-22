@@ -27,6 +27,21 @@
 
 ## ⚙️ Quick Start
 
+Download Dataset:
+```python
+# download hfd
+wget https://hf-mirror.com/hfd/hfd.sh
+chmod a+x hfd.sh
+
+# for linux/mac
+export HF_ENDPOINT=https://hf-mirror.com
+# for win
+#$env:HF_ENDPOINT = "https://hf-mirror.com"
+
+# download data
+./hfd.sh FreedomIntelligence/HealthCoreBench --dataset
+```
+
 ## 🌍 Who Uses It?
 
 ## 📧 Contact
