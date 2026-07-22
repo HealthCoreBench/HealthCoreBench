@@ -44,6 +44,11 @@ export HF_ENDPOINT=https://hf-mirror.com
 
 ## 📝 Citation
 
+If you find HealthCoreBench useful, please cite us:
+```bib
+
+```
+
 ## 👍 Acknowledgement
 
 We thank the contributors of [MedEvalKit](https://github.com/alibaba-damo-academy/MedEvalKit), [Medmarks](https://github.com/MedARC-AI/Medmarks), [Awesome-AI4Med](https://github.com/FreedomIntelligence/Awesome-AI4Med), and [Awesome-Medical-Agents](https://github.com/zhcz328/Awesome-Medical-Agents) for their valuable contributions to the medical AI community. These open-source projects provide important foundations for medical benchmark evaluation, resource organization, and the development of medical AI systems. Their efforts have greatly facilitated reproducible research and inspired the construction of HealthCoreBench.
