@@ -15,13 +15,6 @@
 [![][github-stars-shield]][github-stars-link]
 [![][github-issues-shield]][github-issues-link]
 
-[🌐Website](https://opencompass.org.cn/) |
-[📖CompassHub](https://hub.opencompass.org.cn/home) |
-[📊CompassRank](https://rank.opencompass.org.cn/home) |
-[📘Documentation](https://opencompass.readthedocs.io/en/latest/) |
-[🛠️Installation](https://opencompass.readthedocs.io/en/latest/get_started/installation.html) |
-[🤔Reporting Issues](https://github.com/open-compass/opencompass/issues/new/choose)
-
 #### 🌟 Highlights
 
 ## 💡 News
