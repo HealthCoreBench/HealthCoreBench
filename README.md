@@ -40,14 +40,14 @@ export HF_ENDPOINT=https://hf-mirror.com
 
 ## 🌍 Who Uses It?
 
-## 📧 Contact
-
 ## 📝 Citation
 
 If you find HealthCoreBench useful, please cite us:
 ```bib
 
 ```
+
+If you have any suggestions or questions, please feel free to contact me via 📧 email: `rongshengwang@link.cuhk.edu.cn`
 
 ## 👍 Acknowledgement
 
