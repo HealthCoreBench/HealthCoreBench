@@ -6,7 +6,7 @@
 > HealthCoreBench serves as a practical extension of [Awesome-AI4Med](https://github.com/FreedomIntelligence/Awesome-AI4Med), transforming its broad resource curation into a curated, executable benchmark evaluation framework for medical AI systems. This is just the beginning of this journey, and we will keep expanding it in the future!
 
 [![arXiv](https://img.shields.io/badge/Arxiv-2606.07962-b31b1b.svg?logo=arXiv)](https://arxiv.org/abs/2606.07962)
-[![hf_space](https://img.shields.io/badge/🤗-ChronoPhyBench-blue.svg)](https://huggingface.co/datasets/Kohsin/ChronoPhyBench)
+[![hf_space](https://img.shields.io/badge/🤗-HealthCoreBench-blue.svg)](https://huggingface.co/datasets/Kohsin/ChronoPhyBench)
 
 [![][github-release-shield]][github-release-link]
 [![][github-contributors-shield]][github-contributors-link]
