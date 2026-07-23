@@ -47,7 +47,7 @@ If you find HealthCoreBench useful, please cite us:
 
 ```
 
-If you have any suggestions or questions, please feel free to contact us via 📮email: `rongshengwang@link.cuhk.edu.cn`
+If you have any suggestions or questions, please feel free to submit an issue, open a pull request (PR), or contact us via 📮 email: `rongshengwang@link.cuhk.edu.cn`.
 
 ## 👍 Acknowledgement
 
