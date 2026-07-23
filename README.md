@@ -2,13 +2,6 @@
 
 ![](./assets/healthcorebench.png)
 
-**HealthCoreBench** aims to advance medical evaluation through two complementary directions: building a unified evaluation infrastructure and curating a compact, reliable benchmark for measuring medical intelligence.
-
-* **Unified medical evaluation infrastructure.** HealthCoreBench provides a comprehensive evaluation suite covering **71 language tasks and 36 multimodal tasks**, together with a unified open-source evaluation framework that enables efficient and standardized assessment of medical capabilities across diverse models.
-
-* **Compact and reliable benchmark curation.** HealthCoreBench identifies a high-quality subset from a broad and fragmented benchmark pool, rather than simply reducing benchmark size or selecting questions with the lowest model accuracy. The resulting benchmark is **compact, diverse, challenging, and reliable**, ensuring that model failures more meaningfully reflect limitations in medical intelligence.
-
-
 [![Project Page](https://img.shields.io/badge/Project-Website-2ea44f)](https://pku-yuangroup.github.io/Helios-Page)
 [![arXiv](https://img.shields.io/badge/Arxiv-2606.07962-b31b1b.svg?logo=arXiv)](https://arxiv.org/abs/2606.07962)
 [![hf_space](https://img.shields.io/badge/🤗-HealthCoreBench-blue.svg)](https://huggingface.co/datasets/Kohsin/ChronoPhyBench)
@@ -18,6 +11,12 @@
 [![][github-forks-shield]][github-forks-link]
 [![][github-stars-shield]][github-stars-link]
 [![][github-issues-shield]][github-issues-link]
+
+**HealthCoreBench** aims to advance medical evaluation through two complementary directions: building a unified evaluation infrastructure and curating a compact, reliable benchmark for measuring medical intelligence.
+
+* **Unified medical evaluation infrastructure.** HealthCoreBench provides a comprehensive evaluation suite covering **71 language tasks and 36 multimodal tasks**, together with a unified open-source evaluation framework that enables efficient and standardized assessment of medical capabilities across diverse models.
+
+* **Compact and reliable benchmark curation.** HealthCoreBench identifies a high-quality subset from a broad and fragmented benchmark pool, rather than simply reducing benchmark size or selecting questions with the lowest model accuracy. The resulting benchmark is **compact, diverse, challenging, and reliable**, ensuring that model failures more meaningfully reflect limitations in medical intelligence.
 
  ![](https://github.com/WangRongsheng/CareGPT/blob/main/assets/images/hx.png?raw=true)
 
