@@ -29,7 +29,7 @@ You can use our project in two ways:
 1. **Use the datasets independently:** Download the curated medical evaluation datasets and implement your own evaluation pipeline.
 2. **Use the HealthCoreBench framework:** Directly run standardized medical capability evaluations through the unified HealthCoreBench evaluation framework.
 
-### Option 1: Use the datasets independently
+#### Option 1: Use the datasets independently
 
 <details>
 <summary>Click to expand</summary>
@@ -53,7 +53,7 @@ export HF_ENDPOINT=https://hf-mirror.com
 
 </details>
 
-### Option 2: Use the HealthCoreBench framework
+#### Option 2: Use the HealthCoreBench framework
 
 ## 🌍 Who Uses It?
 
