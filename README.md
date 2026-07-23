@@ -26,7 +26,7 @@ English | [中文](README_zh.md)
 
 ## ⚙️ Quick Start
 
-You can use our project in two ways:
+A complete list of all supported evaluation benchmarks can be found [here](). You can use our project in two ways:
 
 1. **Use the datasets independently:** Download the curated medical evaluation datasets and implement your own evaluation pipeline.
 2. **Use the HealthCoreBench framework:** Directly run standardized medical capability evaluations through the unified HealthCoreBench evaluation framework.
