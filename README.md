@@ -22,6 +22,8 @@ English | [中文](README_zh.md)
 
 ## 💡 News
 
+* **`July 20, 2026`** 🤗
+
 ## ⚙️ Quick Start
 
 You can use our project in two ways:
