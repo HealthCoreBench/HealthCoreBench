@@ -12,7 +12,7 @@
 [![][github-stars-shield]][github-stars-link]
 [![][github-issues-shield]][github-issues-link]
 
-**HealthCoreBench** aims to advance medical evaluation through two complementary directions: building a unified evaluation infrastructure and curating a compact, reliable benchmark for measuring medical intelligence.
+**HealthCoreBench** aims to advance medical evaluation through *two complementary directions*: building a unified evaluation infrastructure and curating a compact, reliable benchmark for measuring medical intelligence.
 
 * **Unified medical evaluation infrastructure.** HealthCoreBench provides a comprehensive evaluation suite covering **71 language tasks and 36 multimodal tasks**, together with a unified open-source evaluation framework that enables efficient and standardized assessment of medical capabilities across diverse models.
 
