@@ -61,7 +61,7 @@ export HF_ENDPOINT=https://hf-mirror.com
 
 ## 📝 Citation
 
-If you find this work helpful, please consider to star🌟 this repo or cite us. Thanks for your support!
+If you find this work helpful, please consider to **star🌟 this repo** or **cite us**. Thanks for your support!
 
 ```bib
 
