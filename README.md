@@ -24,7 +24,19 @@
 
 ## ⚙️ Quick Start
 
-Download Dataset:
+You can use our project in two ways:
+
+1. **Use the datasets independently:** Download the curated medical evaluation datasets and implement your own evaluation pipeline.
+2. **Use the HealthCoreBench framework:** Directly run standardized medical capability evaluations through the unified HealthCoreBench evaluation framework.
+
+### Option 1: Use the datasets independently
+
+<details>
+<summary>Click to expand</summary>
+
+You can download all evaluation datasets directly from [Hugging Face]() or download any individual dataset separately.
+
+Accelerated Downloads in China:
 ```python
 # download hfd
 wget https://hf-mirror.com/hfd/hfd.sh
@@ -38,6 +50,10 @@ export HF_ENDPOINT=https://hf-mirror.com
 # download data
 ./hfd.sh FreedomIntelligence/HealthCoreBench --dataset
 ```
+
+</details>
+
+### Option 2: Use the HealthCoreBench framework
 
 ## 🌍 Who Uses It?
 
