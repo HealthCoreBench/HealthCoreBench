@@ -44,6 +44,7 @@ Accelerated Downloads in China:
 wget https://hf-mirror.com/hfd/hfd.sh
 chmod a+x hfd.sh
 
+# set mirror
 # for linux/mac
 export HF_ENDPOINT=https://hf-mirror.com
 # for win
