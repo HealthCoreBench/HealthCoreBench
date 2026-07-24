@@ -36,7 +36,7 @@ A complete list of all supported evaluation benchmarks can be found [here](). Yo
 <details>
 <summary>Click to expand</summary>
 
-You can download all evaluation datasets directly from [Hugging Face]() or download any individual dataset separately.
+You can download all evaluation datasets directly from [Hugging Face (link 1)](), [Hugging Face (link 2)]() or download any individual dataset separately.
 
 Accelerated Downloads in China:
 ```python
