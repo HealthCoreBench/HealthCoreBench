@@ -176,6 +176,8 @@ Tests use an in-process mock OpenAI-compatible client and a standard-library moc
 
 </details>
 
+## 🔍 Key Insights and Results
+
 ## 📖 Benchmark Support
 
 HealthCoreBench currently supports 71 medical language benchmarks and 36 medical multimodal benchmarks. See the [complete benchmark catalog](benchmarks/README.md) for descriptions, publications, download links, years, and sample counts.
