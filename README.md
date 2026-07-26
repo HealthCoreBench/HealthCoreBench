@@ -176,6 +176,70 @@ Tests use an in-process mock OpenAI-compatible client and a standard-library moc
 
 </details>
 
+## 📖 Benchmark Support
+
+HealthCoreBench currently supports 71 medical language benchmarks and 36 medical multimodal benchmarks. See the [complete benchmark catalog](benchmarks/README.md) for descriptions, publications, download links, years, and sample counts.
+
+<table align="center" width="100%">
+  <tbody>
+    <tr align="center" valign="bottom">
+      <td colspan="2" width="50%">
+        <b>Medical LLM Benchmarks (71)</b>
+      </td>
+      <td colspan="2" width="50%">
+        <b>Medical VLM Benchmarks (36)</b>
+      </td>
+    </tr>
+    <tr valign="top">
+      <td width="25%">
+
+- [MMLU (Medical)](benchmarks/medical_llm_benchmarks/1_MMLU/)
+- [PubMedQA](benchmarks/medical_llm_benchmarks/2_PubMedQA/)
+- [MedQA-USMLE](benchmarks/medical_llm_benchmarks/69_MedQA-USMLE/)
+- [MedQA-MCMLE](benchmarks/medical_llm_benchmarks/70_MedQA-MCMLE/)
+- [MedMCQA](benchmarks/medical_llm_benchmarks/3_MedMCQA/)
+- [Medbullets](benchmarks/medical_llm_benchmarks/4_Medbullets/)
+
+</td>
+<td width="25%">
+
+- [MedXpertQA (Text)](benchmarks/medical_llm_benchmarks/5_MedXpertQA_Text/)
+- [SuperGPQA (Medicine & Biology)](benchmarks/medical_llm_benchmarks/6_SuperGPQA/)
+- [CMB](benchmarks/medical_llm_benchmarks/8_CMB/)
+- [HLE (Medicine, Text)](benchmarks/medical_llm_benchmarks/11_HLE_med/)
+- [MedR-Bench](benchmarks/medical_llm_benchmarks/27_MedR-Bench/)
+- ...
+
+</td>
+<td width="25%">
+
+- [VQA-RAD](benchmarks/medical_vlm_benchmarks/1_VQA-RAD/)
+- [SLAKE](benchmarks/medical_vlm_benchmarks/2_SLAKE/)
+- [PathVQA](benchmarks/medical_vlm_benchmarks/3_PathVQA/)
+- [PMC-VQA](benchmarks/medical_vlm_benchmarks/4_PMC-VQA/)
+- [OmniMedVQA](benchmarks/medical_vlm_benchmarks/5_OmniMedVQA/)
+- [MedXpertQA](benchmarks/medical_vlm_benchmarks/6_MedXpertQA/)
+- [IU-Xray](benchmarks/medical_vlm_benchmarks/9_IU-Xray/)
+- [MedFrameQA](benchmarks/medical_vlm_benchmarks/11_MedFrameQA/)
+
+</td>
+<td width="25%">
+
+- [Quilt-VQA](benchmarks/medical_vlm_benchmarks/21_Quilt-VQA/)
+- [PathMMU](benchmarks/medical_vlm_benchmarks/22_PathMMU/)
+- [MMMU (Health & Medicine)](benchmarks/medical_vlm_benchmarks/23_MMMU-Health-Medicine/)
+- [MIMIC-Ext-MIMIC-CXR-VQA](benchmarks/medical_vlm_benchmarks/30_MIMIC-Ext-MIMIC-CXR-VQA/)
+- [HLE (Medicine, MM)](benchmarks/medical_vlm_benchmarks/32_HLM/)
+- [GMAI-MMBench (Val)](benchmarks/medical_vlm_benchmarks/36_GMAI-MMBench/)
+- [LiveClin](benchmarks/medical_vlm_benchmarks/34_LiveClin/)
+- ...
+
+</td>
+
+</tr>
+  </tbody>
+</table>
+
 ## 🌍 Who Uses It?
 
 ## 📝 Citation
