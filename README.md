@@ -240,6 +240,58 @@ HealthCoreBench currently supports 71 medical language benchmarks and 36 medical
   </tbody>
 </table>
 
+## 🗂️ Repository Structure
+
+```text
+HealthCoreBench/
+├── assets/                         README images and project artwork
+├── benchmarks/                     benchmark datasets used by the framework
+│   ├── README.md                   complete benchmark catalog and metadata
+│   ├── medical_llm_benchmarks/     71 text-oriented medical benchmarks
+│   │   ├── 1_MMLU/
+│   │   │   ├── anatomy_test.json
+│   │   │   ├── clinical_knowledge_test.json
+│   │   │   └── ...                 one file per selected medical subject
+│   │   ├── 2_PubMedQA/
+│   │   ├── 3_MedMCQA/
+│   │   ├── ...
+│   │   └── 71_GlobalDentBench/
+│   └── medical_vlm_benchmarks/     36 multimodal medical benchmarks
+│       ├── 1_VQA-RAD/
+│       │   ├── images/             image assets referenced by samples
+│       │   ├── vqa_rad_test.json   evaluation annotations
+│       │   └── vqa_rad_test.parquet
+│       ├── 2_SLAKE/
+│       ├── 3_PathVQA/
+│       ├── ...
+│       └── 36_GMAI-MMBench/
+├── configs/                        example and full-suite YAML configurations
+├── healthcorebench/                evaluation framework source package
+│   ├── benchmarks/                 registry plus text and VLM data adapters
+│   ├── clients/                    OpenAI-compatible model clients
+│   ├── evaluators/                 rule-based metrics and LLM-judge support
+│   ├── media/                      image and multimodal input handling
+│   ├── runtime/                    execution, recording, resume, and reporting
+│   ├── schemas/                    persisted data models
+│   ├── tools/                      summarize, reparse, rescore, validate, and export
+│   ├── aggregation/                task and experiment result aggregation
+│   ├── utils/                      shared utilities
+│   ├── cli.py                      command-line interface
+│   └── config.py                   configuration loading and validation
+├── tests/                          unit, regression, integration, and E2E tests
+├── runs/                           generated run artifacts; not source data
+├── AGENTS.md                       instructions for programming assistants
+├── CODE_OF_CONDUCT.md              contributor conduct guidelines
+├── pyproject.toml                  package and tool configuration
+├── requirements.txt                Python dependencies
+└── README.md                       project overview and usage guide
+```
+
+Benchmark directories retain their source-specific layouts, so exact filenames vary by dataset.
+The framework reads them through adapters in `healthcorebench/benchmarks/`; do not confuse those
+adapter modules with the benchmark data stored under `benchmarks/`. See the
+[benchmark catalog](benchmarks/README.md) for every supported benchmark and its source files.
+
 ## 🌍 Who Uses It?
 
 ## 📝 Citation
