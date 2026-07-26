@@ -2,6 +2,7 @@ English | [中文](README_zh.md)
 
 ![](./assets/healthcorebench.png)
 
+![visitors](https://visitor-badge.laobi.icu/badge?page_id=https%3A%2F%2Fgithub.com%2FFreedomIntelligence&left_text=visitors)
 [![Project Page](https://img.shields.io/badge/Project-Website-2ea44f)](https://pku-yuangroup.github.io/Helios-Page)
 [![arXiv](https://img.shields.io/badge/Arxiv-2606.07962-b31b1b.svg?logo=arXiv)](https://arxiv.org/abs/2606.07962)
 [![hf_space](https://img.shields.io/badge/🤗-HealthCoreBench-blue.svg)](https://huggingface.co/datasets/Kohsin/ChronoPhyBench)
