@@ -69,7 +69,7 @@ If you find this work helpful, please consider to **star🌟 this repo** or **ci
 
 ```
 
-If you have any suggestions or questions, please feel free to submit an issue, open a pull request (PR), or contact us via 📮 email: `rongshengwang@link.cuhk.edu.cn`.
+If you have any suggestions or questions, please feel free to [submit an issue](), [open a pull request (PR)](), or contact us via 📮 email: `rongshengwang@link.cuhk.edu.cn`.
 
 ## 👍 Acknowledgement
 
