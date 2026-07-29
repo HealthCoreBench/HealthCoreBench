@@ -1,0 +1,31 @@
+# Text-model config for both native-metric and LLM-judged benchmarks.
+# Only required fields are set; everything else uses sensible defaults
+# (temperature=0, split=test, concurrency=16, resume=on, evaluator auto-selected per benchmark).
+# Data paths are NOT set here — resolved from the registry. Run `list-benchmarks` for names.
+#
+#   python -m healthcorebench run --config configs/example_text.yaml --benchmark MedMCQA
+#   python -m healthcorebench run --config configs/example_text.yaml --benchmark MedQuAD
+#
+# Override without editing the file:
+#   --benchmark <name>  --split <split>  --model <name>  --base-url <url>  --max-samples <n>
+
+experiment:
+  experiment_id: healthcorebench
+  run_name: eval
+
+benchmark:
+  name: MMLU            # bare benchmark name; multi-task ones (CareQA/BioASQ/HLE_med) run every task
+
+model:
+  base_url: http://127.0.0.1:8077/v1
+  requested_model_name: phi-4
+  api_key_env: OPENAI_API_KEY
+
+evaluation:
+  # Native metrics are selected automatically for MCQA/classification/etc. Open tasks whose
+  # benchmark metric is llm_judge automatically use this independent judge endpoint.
+  use_llm_judge: null
+  judge:
+    base_url: https://api.openai.com/v1
+    requested_model_name: gpt-4.1-2025-04-14
+    api_key_env: JUDGE_API_KEY

@@ -1,0 +1,103 @@
+# Run every implemented medical VLM benchmark.
+#
+# Usage:
+#   python -m healthcorebench run --config configs/run_all_benchmarks_multimodal.yaml
+#
+# The explicit task list keeps the run scope reviewable and reproducible. Change
+# benchmark.max_samples or pass --max-samples to control the number of cases per task; the
+# file name intentionally does not encode that limit.
+
+experiment:
+  # Bump this for every new evaluation: runtime.resume=true reuses runs/<experiment_id>/,
+  # so keeping an old id resumes/overwrites that run instead of producing a fresh one.
+  experiment_id: multimodal_benchmarks_v1
+  run_name: all_multimodal_benchmarks_v1
+
+benchmark:
+  # All 56 implemented multimodal tasks (complete task-key list).
+  name: "3MDBench/diagnosis,AgentClinic-VLM/mcqa,BiMed-MBench/open_ar,BiMed-MBench/open_en,DrVD-Bench/independent_mcqa,DrVD-Bench/joint_reasoning,DrVD-Bench/report_generation,DrVD-Bench/visual_evidence,GMAI-MMBench/mcqa,HLM/exact,HLM/mcqa,IU-Xray/report_generation,KorMedMCQA-V/mcqa,Kvasir-VQA/open,LiveClin/mcqa,MIMIC-CXR/multilabel,MIMIC-Ext/choose,MIMIC-Ext/query,MIMIC-Ext/verify,MIMICEchoQA/mcqa,MMMU-Health-Medicine/mcqa,MMMU-Health-Medicine/open,MTBBench/hancock_mcqa,MTBBench/msk_mcqa,MX-CXR/grounding,MedBookVQA/mcqa,MedDocBench/gmd_complex_qa,MedDocBench/gmd_simple_qa,MedDocBench/ltr_abnormality_qa,MedDocBench/ltr_full_parsing,MedDocBench/ltr_simple_qa,MedFrameQA/mcqa,MedXpertQA/mcqa,Medical-CXR-VQA/open,OmniBrainBench/closed,OmniBrainBench/open,OmniMedVQA/mcqa,PMC-VQA/mcqa,PathMMU/mcqa,PathText/caption,PathText/report_generation,PathVQA/closed,PathVQA/open,Quilt-VQA/closed,Quilt-VQA/open,ROCOv2/caption,ROCOv2/concepts,SLAKE/closed,SLAKE/open,SurgeryVideoQA/open,VQA-Med-2019/open,VQA-Med-2020/open,VQA-Med-2021/open,VQA-RAD/closed,VQA-RAD/open,WorldMedQA-V/mcqa"
+  max_samples: 5
+
+model:
+  base_url: http://127.0.0.1:8078/v1
+  requested_model_name: qwen36-27b
+  api_key: EMPTY
+
+generation:
+  temperature: 0.0
+  # The output budget must fit inside hardware.max_model_len. The 262144/64000/32000 tiers
+  # were rejected or timed out on every measured multimodal run (68 timeouts at 64000, 41 at
+  # 32000, 39 at 12800 in v3) — walking them only produced doomed requests. This ladder is the
+  # one that completed the 55-task text run.
+  max_tokens: 8192
+  adaptive_max_tokens: true
+  max_tokens_candidates: [8192, 4096, 2048, 1024, 512, 256, 128, 64]
+  reduce_max_tokens_on_context_error: true
+  reduce_max_tokens_on_timeout: true
+  length_finish_policy: mark_incomplete
+  context_overflow_policy: head_tail
+  context_token_reserve: 512
+
+runtime:
+  concurrency: 8
+  max_retries: 3                   # retries for retryable errors (timeout / 5xx / rate limit)
+  same_budget_error_retries: 2     # same-tier retries; retryable errors only
+  transient_error_ladder_steps: 2  # tiers a timeout/5xx may walk; context errors are unlimited
+  # Consistent with the budget: 8192 output tokens plus image prefill at ~30 tok/s needs ~300s.
+  request_timeout_seconds: 300
+  resume: true               # 断点续跑:同 experiment+bench 会从已完成样本后继续
+  # 续跑时重新请求上次失败的样本,而不是把它们永久留成未评分。成功样本仍然跳过,判分
+  # 缺失的结果也照样补算(那条路径与本开关无关)。代价是每次续跑会对确定性失败的样本
+  # 各多发一次请求;不这样的话,一次端点抖动就会让那些样本在报告里永远是 N/A。
+  retry_failed: true
+
+media:
+  image_detail: auto
+  max_images: 64
+  max_pixels: 4194304
+  max_image_size_mb: 5.0
+  image_format: png
+  allow_image_urls: false
+  max_video_frames: 32
+  video_frame_sampling_strategy: uniform
+
+output:
+  # 受限语料(PhysioNet credentialed)默认会在落盘时清空 samples.jsonl 的 source_content 与
+  # results.jsonl 的 formatted_prompt(仅影响副本,打分从不受影响)。此处由数据控制方声明:
+  # 本机运行目录是存放这些记录的合适位置。放行时同样逐字段告警并写
+  # restricted_data_written_to_artifacts 事件,每次运行只报一次。
+  allow_restricted_data_in_artifacts: true
+  root_dir: runs
+  save_raw_response_object: true
+
+evaluation:
+  # 受限语料(PhysioNet credentialed,见 benchmarks/data_licenses.py)默认拒绝送到非本地
+  # judge。此处由数据控制方声明:已持有该端点所需的授权,数据不会被再分享或上传。
+  # 声明后闸门仍会逐任务告警并把 restricted_data_sent_to_remote_judge 事件写进运行产物,
+  # 声明本身也进 manifest.full_config —— 放行是可见的,不是被抹掉的。
+  allow_restricted_data_to_remote_judge: true
+  # Native VLM metrics are selected automatically. Open/report tasks use this judge when needed.
+  use_llm_judge: null
+  judge:
+    base_url: https://api.shubiaobiao.cn/v1
+    api_key: sk-YFkdioOywgE9oHlq82D868B0Ce314e5088094aD3F30a4d31
+    requested_model_name: gpt-5.5
+    temperature: 0.0
+    max_tokens: 12068
+
+hardware:
+  # Required: the text budget handed to the prompt trimmer. Leaving it null disables trimming
+  # entirely — records longer than the window fail outright instead of being trimmed, and the
+  # score then covers only the records that happened to fit, with no bias warning.
+  #
+  # 65536 = 131072 served window / 2, i.e. half the window is held back for vision tokens.
+  # Both halves are measured, not guessed:
+  #   * served window: this endpoint's own vLLM 400 says
+  #     "max_tokens=262144 cannot be greater than max_model_len=max_total_tokens=131072"
+  #     (runs/multimodal_benchmarks_v3, runs/multimodal_benchmarks_strict_v1).
+  #   * vision reservation: fit_context_to_window only counts *text*, so image/frame prefill
+  #     must be left outside this number. The heaviest measured request is SurgeryVideoQA/open
+  #     at 32 sampled frames = 65,399 prompt tokens (~2,044 per frame); MTBBench/hancock_mcqa
+  #     with 35 images peaks at 38,304. 65,536 covers the worst case actually observed.
+  # Raise this only together with lowering media.max_images / media.max_video_frames.
+  max_model_len: 65536

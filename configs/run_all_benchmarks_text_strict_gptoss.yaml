@@ -1,0 +1,85 @@
+# 运行可通过离散答案或明确数值容差进行确定性严格判分的文本 benchmark。
+# 使用方法:
+#   python -m healthcorebench run --config configs/run_all_benchmarks_text_strict.yaml
+#
+# 用途:
+#   - 评估单选、多选集合、固定标签分类和数值计算任务
+#   - 对每条回答执行不依赖 LLM judge 的确定性判分
+#   - 与包含开放式生成任务的完整文本评估分开保存
+#
+# 输出: runs/text_benchmarks_strict_v1/<bench>/<task>/summary.json
+
+experiment:
+  # 每次新评测都要改这里: runtime.resume=true 会复用 runs/<experiment_id>/ 下已有结果,
+  # 沿用旧 id 会续跑/覆盖那次运行,而不是产生一次新的、可复现的运行。
+  experiment_id: text_benchmarks_strict_gpt-oss_run2
+  run_name: all_text_benchmarks_strict_gpt-oss_run2
+
+benchmark:
+  # 71 个严格任务: 50 个单选(accuracy/single_choice)、7 个多答案集合(set_match/multi_choice)、
+  # 13 个固定标签分类(label/yes_no/yes_no_maybe)和 1 个数值计算(numeric_tolerance)。
+  # */multiple_answer 是从对应 */mcqa 拆出的多答案题,按 set_match 判分,同样是确定性可评任务。
+  # 任务列表必须与 configs/run_all_benchmarks_text_strict.yaml 完全一致,只有模型端点不同。
+  # MedS-Bench 不包含在此配置中。
+  name: "AfriMedQA_v2/mcqa,AfriMedQA_v2/multiple_answer,BioASQ/yesno,CMB/mcqa,CMB/multiple_answer,CMExam/mcqa,CMExam/multiple_answer,CMMLU/mcqa,CareQA/mcqa,ClinicBench/drug_interaction,ClinicBench/mcqa,ClinicalBench/length_of_stay,ClinicalBench/mortality,ClinicalBench/readmission,DiagnosisArena/mcqa,EHRBench/risk,FrenchMedMCQA/mcqa,GPQA/mcqa,GlobalDentBench/mcqa,GlobalDentBench/multiple_answer,HEAD-QA_v2/mcqa,HEAD-QA_v2/mcqa_es,HEAD-QA_v2/mcqa_gl,HEAD-QA_v2/mcqa_it,HEAD-QA_v2/mcqa_ru,HLE_med/mcqa,IOR-Bench/dynamic,IOR-Bench/triage,IgakuQA/mcqa,IgakuQA/multiple_answer,JEMD/mcqa,JMedBench/crade,JMedBench/mcqa,JMedBench/rrtnm,JMedBench/smdis,KorMedMCQA/mcqa,LongHealth/mcqa,MEDEC/detection,MIMIC-CDM/diagnosis,MMLU-Pro_Health/mcqa,MMLU/mcqa,MMedBench/mcqa,MMedBench/multiple_answer,Med-HALT/reasoning,Med-HALT/reasoning_nota,MedArabiQ/bias_mcqa,MedArabiQ/fill_choice,MedArabiQ/mcqa,MedCalc-Bench/calculation,MedConceptsQA/mcqa_easy,MedConceptsQA/mcqa_hard,MedConceptsQA/mcqa_medium,MedExQA/mcqa,MedExpQA/mcqa,MedHallu/detection,MedMCQA/mcqa,MedNLI/nli,MedQA_MCMLE/mcqa,MedQA_USMLE/mcqa,MedXpertQA_Text/mcqa,Medbullets/mcqa,MediQ/mcqa,Meta-MedQA/mcqa,PrinciplismQA/mcqa,PubHealthBench/mcqa,PubMedQA/classification,ReDis-QA/mcqa,SuperGPQA/mcqa,Swedish_Medical_LLM_Benchmark/clinical_case_mcqa,Swedish_Medical_LLM_Benchmark/mcqa,Swedish_Medical_LLM_Benchmark/specialist_mcqa,Swedish_Medical_LLM_Benchmark/theory_mcqa,mARC/mcqa"
+  # max_samples: 10           # 每个任务的样本上限;可修改或通过 --max-samples 覆盖
+  # split: test               # 默认 test
+
+model:
+  base_url: http://127.0.0.1:8092/v1        # 你的 vLLM/推理服务地址
+  requested_model_name: gptoss-20b   # 改成你部署的模型名
+  api_key: sk-YFkdioOywgE9oHlq82D868B0Ce314e5088094aD3F30a4d31
+
+generation:
+  temperature: 0.0          # 确定性采样
+  # 输出预算必须放得进 hardware.max_model_len:8192 输出 + 16384 窗口 = 给上下文留 ~7.6k。
+  # 262144 这类档位在本部署下必然被服务端拒绝(400: max_tokens is too large),
+  # 只会产生大量注定失败的请求;下面这组是 run1 实测跑通 55 个任务的阶梯。
+  max_tokens: 8192
+  adaptive_max_tokens: true
+  max_tokens_candidates: [8192, 4096, 2048, 1024, 512, 256, 128, 64]
+  reduce_max_tokens_on_context_error: true
+  reduce_max_tokens_on_timeout: true
+  length_finish_policy: mark_incomplete
+  context_overflow_policy: head_tail  # 长上下文保留首尾,并在样本 metadata 中记录裁剪信息
+  context_token_reserve: 512          # 为聊天模板和估算误差保留 token
+
+runtime:
+  concurrency: 16            # 并发请求数;根据 GPU 显存/服务吞吐调整(8-32)
+  max_retries: 3             # 可重试错误(超时/5xx/限流)的重试次数
+  same_budget_error_retries: 2  # 同档重试次数;仅对可重试错误生效
+  transient_error_ladder_steps: 2  # 超时/5xx 最多下降几档;上下文错误不受此限制
+  # 单个请求超时(秒)。必须与输出预算一致: 8192 tokens 在 ~45 tok/s 下约需 180s。
+  request_timeout_seconds: 180
+  resume: true               # 断点续跑:同 experiment+bench 会从已完成样本后继续
+  # 续跑时重新请求上次失败的样本,而不是把它们永久留成未评分。成功样本仍然跳过,判分
+  # 缺失的结果也照样补算(那条路径与本开关无关)。代价是每次续跑会对确定性失败的样本
+  # 各多发一次请求;不这样的话,一次端点抖动就会让那些样本在报告里永远是 N/A。
+  retry_failed: true
+
+output:
+  # 受限语料(PhysioNet credentialed)默认会在落盘时清空 samples.jsonl 的 source_content 与
+  # results.jsonl 的 formatted_prompt(仅影响副本,打分从不受影响)。此处由数据控制方声明:
+  # 本机运行目录是存放这些记录的合适位置。放行时同样逐字段告警并写
+  # restricted_data_written_to_artifacts 事件,每次运行只报一次。
+  allow_restricted_data_in_artifacts: true
+  root_dir: runs             # 输出根目录(相对当前目录或绝对路径)
+  save_raw_response_object: true   # 保存完整响应对象(用于离线 reparse)
+
+evaluation:
+  # 严格任务只使用确定性规则评估器，显式禁止 LLM judge。
+  use_llm_judge: false
+
+hardware:
+  # 必填: 服务端真实的上下文窗口(tokens)。留空(null)会完全关闭 prompt 裁剪 ——
+  # 超长记录不会被裁剪而是直接失败,分数只覆盖"够短的那些样本",且不会有偏差提示。
+  # 16384 的依据(保守取值,宁可多裁也不要让长记录整条失败):
+  #   1) runs/text_benchmarks_strict_gpt-oss_run1 就是用 max_model_len=16384 跑的
+  #      (见其 manifest.json),174,626 次请求里没有出现过一次上下文/max_tokens 类 400,
+  #      实测最长 prompt 12,572 tokens + 8192 输出被该端点接受,说明 16384 这个预算安全;
+  #   2) 本配置与 run_all_benchmarks_text_strict.yaml 跑的是完全相同的 71 个任务,
+  #      只有模型端点不同。两边必须用同一个窗口,否则裁剪程度不同、输入就不同,
+  #      gpt-oss-20b 与 phi-4 的分数不再可比。
+  # 如果你部署 gptoss-20b 时用了更大的 --max-model-len(该模型原生 131072),
+  # 想放开窗口就把这里和上面的对照配置一起改,不要只改一边。
+  max_model_len: 16384

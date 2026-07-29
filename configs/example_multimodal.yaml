@@ -1,0 +1,25 @@
+# Minimal config template: multimodal (vision) model on an OpenAI-compatible endpoint.
+# Same as example_text.yaml plus a media block for image handling; non-media defaults apply
+# (temperature=0, evaluator auto-selected, split=test, ...).
+#
+# Use a task key, a benchmark family, or ALL_VLM (all 56 multimodal tasks).
+#
+#   python -m healthcorebench run --config configs/example_multimodal.yaml --benchmark VQA-RAD
+
+experiment:
+  experiment_id: healthcorebench
+  run_name: mm_eval
+
+benchmark:
+  name: VQA-RAD/closed
+
+model:
+  base_url: http://127.0.0.1:8000/v1
+  requested_model_name: Qwen2.5-VL-7B-Instruct
+  api_key_env: OPENAI_API_KEY
+
+media:
+  max_images: 64             # total image parts after video frame sampling
+  max_pixels: 4194304        # downscale images beyond ~4M px
+  max_video_frames: 16
+  video_frame_sampling_strategy: uniform

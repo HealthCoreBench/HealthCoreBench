@@ -1,0 +1,93 @@
+# Run multimodal benchmarks that have structured references and deterministic scorers.
+#
+# Usage:
+#   python -m healthcorebench run --config configs/run_all_benchmarks_multimodal_strict.yaml
+#
+# This configuration excludes open-ended QA, captioning, report generation, and video QA.
+# It never uses an LLM judge or free-text semantic-overlap scoring.
+
+experiment:
+  # Bump this for every new evaluation: runtime.resume=true reuses runs/<experiment_id>/,
+  # so keeping an old id resumes/overwrites that run instead of producing a fresh one.
+  experiment_id: multimodal_benchmarks_strict_v2
+  run_name: all_multimodal_benchmarks_strict_v2
+
+benchmark:
+  # 33 strict tasks: closed/fixed-label, multistage choice, multilabel, grounding,
+  # and structured document parsing.
+  name: "3MDBench/diagnosis,AgentClinic-VLM/mcqa,DrVD-Bench/independent_mcqa,DrVD-Bench/joint_reasoning,DrVD-Bench/visual_evidence,GMAI-MMBench/mcqa,HLM/mcqa,KorMedMCQA-V/mcqa,LiveClin/mcqa,MIMIC-CXR/multilabel,MIMIC-Ext/choose,MIMIC-Ext/query,MIMIC-Ext/verify,MIMICEchoQA/mcqa,MMMU-Health-Medicine/mcqa,MTBBench/hancock_mcqa,MTBBench/msk_mcqa,MX-CXR/grounding,MedBookVQA/mcqa,MedDocBench/ltr_abnormality_qa,MedDocBench/ltr_full_parsing,MedFrameQA/mcqa,MedXpertQA/mcqa,OmniBrainBench/closed,OmniMedVQA/mcqa,PMC-VQA/mcqa,PathMMU/mcqa,PathVQA/closed,Quilt-VQA/closed,ROCOv2/concepts,SLAKE/closed,VQA-RAD/closed,WorldMedQA-V/mcqa"
+  max_samples: 10
+
+model:
+  base_url: http://127.0.0.1:8383/v1
+  requested_model_name: qwen36-27b
+  api_key: sk-YFkdioOywgE9oHlq82D868B0Ce314e5088094aD3F30a4d31
+
+generation:
+  temperature: 0.0
+  # The output budget must fit inside hardware.max_model_len. The 262144/64000/32000 tiers
+  # were rejected or timed out on every measured multimodal run (68 timeouts at 64000, 41 at
+  # 32000, 39 at 12800 in v3) — walking them only produced doomed requests. This ladder is the
+  # one that completed the 55-task text run.
+  max_tokens: 8192
+  adaptive_max_tokens: true
+  max_tokens_candidates: [8192, 4096, 2048, 1024, 512, 256, 128, 64]
+  reduce_max_tokens_on_context_error: true
+  reduce_max_tokens_on_timeout: true
+  length_finish_policy: mark_incomplete
+  context_overflow_policy: head_tail
+  context_token_reserve: 512
+
+runtime:
+  concurrency: 8
+  max_retries: 3                   # retries for retryable errors (timeout / 5xx / rate limit)
+  same_budget_error_retries: 2     # same-tier retries; retryable errors only
+  transient_error_ladder_steps: 2  # tiers a timeout/5xx may walk; context errors are unlimited
+  # Consistent with the budget: 8192 output tokens plus image prefill at ~30 tok/s needs ~300s.
+  request_timeout_seconds: 300
+  resume: true               # 断点续跑:同 experiment+bench 会从已完成样本后继续
+  # 续跑时重新请求上次失败的样本,而不是把它们永久留成未评分。成功样本仍然跳过,判分
+  # 缺失的结果也照样补算(那条路径与本开关无关)。代价是每次续跑会对确定性失败的样本
+  # 各多发一次请求;不这样的话,一次端点抖动就会让那些样本在报告里永远是 N/A。
+  retry_failed: true
+
+media:
+  image_detail: auto
+  max_images: 64
+  max_pixels: 4194304
+  max_image_size_mb: 5.0
+  image_format: png
+  allow_image_urls: false
+  max_video_frames: 32
+  video_frame_sampling_strategy: uniform
+
+output:
+  # 受限语料(PhysioNet credentialed)默认会在落盘时清空 samples.jsonl 的 source_content 与
+  # results.jsonl 的 formatted_prompt(仅影响副本,打分从不受影响)。此处由数据控制方声明:
+  # 本机运行目录是存放这些记录的合适位置。放行时同样逐字段告警并写
+  # restricted_data_written_to_artifacts 事件,每次运行只报一次。
+  allow_restricted_data_in_artifacts: true
+  root_dir: runs
+  save_raw_response_object: true
+
+evaluation:
+  # Strict tasks use only deterministic evaluators; no judge credentials are needed.
+  use_llm_judge: false
+
+hardware:
+  # Required: the text budget handed to the prompt trimmer. Leaving it null disables trimming
+  # entirely — records longer than the window fail outright instead of being trimmed, and the
+  # score then covers only the records that happened to fit, with no bias warning.
+  #
+  # 65536 = 131072 served window / 2, i.e. half the window is held back for vision tokens.
+  # Both halves are measured, not guessed:
+  #   * served window: this endpoint's own vLLM 400 says
+  #     "max_tokens=262144 cannot be greater than max_model_len=max_total_tokens=131072"
+  #     (runs/multimodal_benchmarks_strict_v1, runs/multimodal_benchmarks_v3).
+  #   * vision reservation: fit_context_to_window only counts *text*, so image prefill must be
+  #     left outside this number. The heaviest measured request in this strict set is
+  #     MTBBench/hancock_mcqa at 35 images = 38,304 prompt tokens (~1,000 per image), and the
+  #     full multimodal set peaks at 65,399 (SurgeryVideoQA, 32 frames). Keeping the same
+  #     65,536 as run_all_benchmarks_multimodal.yaml keeps the two runs' trimming identical.
+  # Raise this only together with lowering media.max_images / media.max_video_frames.
+  max_model_len: 65536

@@ -1,0 +1,63 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Test, lint, type-check, and coverage caches
+/.pytest_cache/
+/.ruff_cache/
+.mypy_cache/
+.pyre/
+.pytype/
+.hypothesis/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Packaging and build artifacts
+/build/
+/dist/
+*.egg-info/
+.eggs/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Local environment and editor files
+.env
+.env.*
+!.env.example
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Local benchmark data and generated evaluation outputs
+/benchmarks/*
+!/benchmarks/README.md
+/.benchmarks/
+/runs/
+/.healthcorebench.lock
+
+# Legacy local data directories
+/datas/OmniMedVQA/
+/datas/PMC-VQA/
+/datas/SLAKE/
+/datas/MedXpertQA/
+
+# Downloaded or generated data archives
+*.tgz
+*.zip
+*.parquet
+
+# Logs and interrupted atomic writes
+*.log
+*.tmp

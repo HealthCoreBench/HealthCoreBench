@@ -1,0 +1,23 @@
+# HealthCoreBench v2 runtime dependencies.
+#
+# The framework no longer loads models in-process, so torch / vLLM / transformers /
+# flash-attn are NOT required. Models are served externally behind an OpenAI-compatible API.
+
+openai>=1.30
+pydantic>=2.0
+PyYAML>=6.0
+pillow>=10.0
+pyarrow>=14.0
+
+# rule-based generation/short-answer metrics
+# rouge-score: ROUGE-1/2/L for summarization; sacrebleu: BLEU; jieba: Chinese word
+# segmentation so ROUGE/BLEU on Chinese benchmarks tokenize on words, not raw characters.
+rouge-score>=0.1.2
+sacrebleu>=2.4
+jieba>=0.42
+tqdm>=4.60
+ijson>=3.2
+
+# testing
+pytest>=8.0
+pytest-asyncio>=0.23

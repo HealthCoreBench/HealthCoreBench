@@ -1,0 +1,92 @@
+# 运行所有已验证的文本 benchmark。每个任务的样本上限可在 benchmark.max_samples 中调整。
+# 使用方法:
+#   python -m healthcorebench run --config configs/run_all_benchmarks_text.yaml
+#
+# 用途:
+#   - 快速验证所有数据集能正常加载、推理和评分
+#   - 检查哪些数据集需要 LLM judge
+#   - 验证输出目录结构
+#
+# 输出: runs/text_benchmarks/<bench>/<task>/summary.json
+
+experiment:
+  # 每次新评测都要改这里: runtime.resume=true 会复用 runs/<experiment_id>/ 下已有结果,
+  # 沿用旧 id 会续跑/覆盖那次运行,而不是产生一次新的、可复现的运行。
+  experiment_id: text_benchmarks_v1
+  run_name: all_text_benchmarks_v1
+
+benchmark:
+  # 所有 134 个已启用的任务(完整 task key 列表)。
+  # */multiple_answer 是从对应 */mcqa 中拆出的多答案题(按 set_match 判分),
+  # 缺了它们这些题就永远跑不到,必须与 registry 中 component=Language 且 enabled=True 的实现集合保持一致。
+  # EHRNoteQA/mcqa 等 registry 里 enabled=False 的任务不在此列表中:它们的分数不成立
+  # (原因见 registry 的 disabled_reason),留在配置里只会产出看起来像分数的噪声。
+  name: "ACI-Bench_HF/summarization,AfriMedQA_v2/mcqa,AfriMedQA_v2/multiple_answer,AfriMedQA_v2/open,AgentClinic/diagnosis,BioASQ/factoid,BioASQ/list,BioASQ/summary,BioASQ/yesno,BioHopR/multi,BioHopR/single,CMB/mcqa,CMB/multiple_answer,CMB/open,CMExam/mcqa,CMExam/multiple_answer,CMMLU/mcqa,CareQA/mcqa,CareQA/open,ClinicBench/drug_interaction,ClinicBench/hospitalization,ClinicBench/mcqa,ClinicBench/patient_education,ClinicBench/treatment,ClinicalBench/length_of_stay,ClinicalBench/mortality,ClinicalBench/readmission,DiagnosisArena/mcqa,EHRBench/decision,EHRBench/risk,FrenchMedMCQA/mcqa,GPQA/mcqa,GeneTuring/open,GlobalDentBench/cbq,GlobalDentBench/mcqa,GlobalDentBench/multiple_answer,HEAD-QA_v2/mcqa,HEAD-QA_v2/mcqa_es,HEAD-QA_v2/mcqa_gl,HEAD-QA_v2/mcqa_it,HEAD-QA_v2/mcqa_ru,HLE_med/exact,HLE_med/mcqa,IOR-Bench/dynamic,IOR-Bench/triage,IgakuQA/mcqa,IgakuQA/multiple_answer,JEMD/mcqa,JMedBench/crade,JMedBench/mcqa,JMedBench/rrtnm,JMedBench/smdis,KorMedMCQA/mcqa,LLMEval-Med/open,LiveQA/open,LongHealth/mcqa,MEDEC/correction,MEDEC/detection,MIMIC-CDM/diagnosis,MMLU-Pro_Health/mcqa,MMLU/mcqa,MMedBench/mcqa,MMedBench/multiple_answer,MeQSum/summarization,Med-HALT/reasoning,Med-HALT/reasoning_nota,MedArabiQ/bias_mcqa,MedArabiQ/fill_choice,MedArabiQ/fill_open,MedArabiQ/mcqa,MedArabiQ/patient_qa,MedArabiQ/patient_qa_gec,MedArabiQ/patient_qa_llm,MedBrowseComp/open,MedCalc-Bench/calculation,MedCaseReasoning/open,MedChain/diagnosis,MedConceptsQA/mcqa_easy,MedConceptsQA/mcqa_hard,MedConceptsQA/mcqa_medium,MedExQA/mcqa,MedExpQA/mcqa,MedHallu/detection,MedMCQA/mcqa,MedNLI/nli,MedQA-CS/open,MedQA_MCMLE/mcqa,MedQA_USMLE/mcqa,MedQuAD/open,MedR-Bench/diagnosis,MedR-Bench/treatment,MedS-Bench/task1,MedS-Bench/task2,MedS-Bench/task3,MedS-Bench/task12,MedS-Bench/task16,MedS-Bench/task18,MedS-Bench/task29,MedS-Bench/task46,MedS-Bench/task50,MedS-Bench/task61,MedS-Bench/task74,MedS-Bench/task100,MedS-Bench/task106,MedS-Bench/task122,MedS-Bench/task123,MedS-Bench/task125,MedS-Bench/task126,MedS-Bench/task127,MedS-Bench/task128,MedS-Bench/task130,MedS-Bench/task131,MedSafetyBench/safety,MedThink-Bench/open,MedXpertQA_Text/mcqa,Medbullets/mcqa,MediQ/mcqa,MedicationQA/open,Meta-MedQA/mcqa,PrinciplismQA/mcqa,PrinciplismQA/open,PrinciplismQA/rubric,PubHealthBench/mcqa,PubMedQA/classification,RJUA-QA/open,RareBench/diagnosis,ReDis-QA/mcqa,SCTPublic/likert,SuperGPQA/mcqa,Swedish_Medical_LLM_Benchmark/clinical_case_mcqa,Swedish_Medical_LLM_Benchmark/mcqa,Swedish_Medical_LLM_Benchmark/specialist_mcqa,Swedish_Medical_LLM_Benchmark/theory_mcqa,VivaBench/diagnosis,mARC/mcqa,webMedQA/open"
+  max_samples: 5           # 每个任务的样本上限;可修改或通过 --max-samples 覆盖
+  # split: test               # 默认 test
+
+model:
+  base_url: http://127.0.0.1:8077/v1        # 你的 vLLM/推理服务地址
+  requested_model_name: phi-4   # 改成你部署的模型名
+  api_key: EMPTY
+
+generation:
+  temperature: 0.0          # 确定性采样
+  # 输出预算必须放得进 hardware.max_model_len:8192 输出 + 16384 窗口 = 给上下文留 ~7.6k。
+  # 262144 这类档位在本部署下必然被服务端拒绝(400: max_tokens is too large),
+  # 只会产生大量注定失败的请求;下面这组是 run1 实测跑通 55 个任务的阶梯。
+  max_tokens: 8192
+  adaptive_max_tokens: true
+  max_tokens_candidates: [8192, 4096, 2048, 1024, 512, 256, 128, 64]
+  reduce_max_tokens_on_context_error: true
+  reduce_max_tokens_on_timeout: true
+  length_finish_policy: mark_incomplete
+  context_overflow_policy: head_tail  # 长上下文保留首尾,并在样本 metadata 中记录裁剪信息
+  context_token_reserve: 512          # 为聊天模板和估算误差保留 token
+
+runtime:
+  concurrency: 16            # 并发请求数;根据 GPU 显存/服务吞吐调整(8-32)
+  max_retries: 3             # 可重试错误(超时/5xx/限流)的重试次数
+  same_budget_error_retries: 2  # 同档重试次数;仅对可重试错误生效
+  transient_error_ladder_steps: 2  # 超时/5xx 最多下降几档;上下文错误不受此限制
+  # 单个请求超时(秒)。必须与输出预算一致: 8192 tokens 在 ~45 tok/s 下约需 180s。
+  request_timeout_seconds: 180
+  resume: true               # 断点续跑:同 experiment+bench 会从已完成样本后继续
+  # 续跑时重新请求上次失败的样本,而不是把它们永久留成未评分。成功样本仍然跳过,判分
+  # 缺失的结果也照样补算(那条路径与本开关无关)。代价是每次续跑会对确定性失败的样本
+  # 各多发一次请求;不这样的话,一次端点抖动就会让那些样本在报告里永远是 N/A。
+  retry_failed: true
+
+output:
+  # 受限语料(PhysioNet credentialed)默认会在落盘时清空 samples.jsonl 的 source_content 与
+  # results.jsonl 的 formatted_prompt(仅影响副本,打分从不受影响)。此处由数据控制方声明:
+  # 本机运行目录是存放这些记录的合适位置。放行时同样逐字段告警并写
+  # restricted_data_written_to_artifacts 事件,每次运行只报一次。
+  allow_restricted_data_in_artifacts: true
+  root_dir: runs             # 输出根目录(相对当前目录或绝对路径)
+  save_raw_response_object: true   # 保存完整响应对象(用于离线 reparse)
+
+evaluation:
+  # 受限语料(PhysioNet credentialed,见 benchmarks/data_licenses.py)默认拒绝送到非本地
+  # judge。此处由数据控制方声明:已持有该端点所需的授权,数据不会被再分享或上传。
+  # 声明后闸门仍会逐任务告警并把 restricted_data_sent_to_remote_judge 事件写进运行产物,
+  # 声明本身也进 manifest.full_config —— 放行是可见的,不是被抹掉的。
+  allow_restricted_data_to_remote_judge: true
+  # LLM judge 配置(用于诊断/开放题等需要 judge 打分的任务)
+  use_llm_judge: null  # 自动选择:仅声明为 llm_judge 的任务启用,其余使用原生指标
+  judge:
+    # judge 必须是一个真实存在的模型:gpt-5.5 不是 OpenAI 的模型名。
+    # 若换成 reasoning 模型(o 系列),再把 reasoning_effort 设成 none/low/...。
+    base_url: https://api.shubiaobiao.cn/v1
+    api_key: sk-YFkdioOywgE9oHlq82D868B0Ce314e5088094aD3F30a4d31
+    requested_model_name: gpt-4.1-2025-04-14
+    temperature: 0.0
+    max_tokens: 8192
+    reasoning_effort: null
+
+hardware:
+  # 必填: 服务端真实的上下文窗口(tokens)。留空(null)会完全关闭 prompt 裁剪 ——
+  # 超长记录不会被裁剪而是直接失败,分数只覆盖"够短的那些样本",且不会有偏差提示。
+  # 16384 来自本部署 vLLM 自己的报错("This model's maximum context length is 16384
+  # tokens"),换模型/换端口时必须同步改这里。
+  max_model_len: 16384
