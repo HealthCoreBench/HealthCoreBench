@@ -105,6 +105,12 @@ python -m healthcorebench run --config configs/example_text.yaml \
     --base-url http://127.0.0.1:8000/v1 --concurrency 32
 ```
 
+Evaluated-model request concurrency is configured with `runtime.concurrency` in YAML (or
+overridden with `--concurrency`). The default and all shipped configs use `1`, which sends
+requests serially. Set it to `2` or more to allow that many independent API requests in flight;
+choose a value supported by the model server's throughput and rate limits. LLM-judge concurrency
+is configured independently with `evaluation.judge.concurrency`.
+
 ##### Commands
 
 | Command | Purpose |

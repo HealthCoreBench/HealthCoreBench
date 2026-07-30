@@ -105,6 +105,12 @@ python -m healthcorebench run --config configs/example_text.yaml \
     --base-url http://127.0.0.1:8000/v1 --concurrency 32
 ```
 
+被评估模型的请求并发数由 YAML 中的 `runtime.concurrency` 控制，也可以用
+`--concurrency` 临时覆盖。默认值以及仓库自带的所有配置均为 `1`，此时严格串行请求；
+设置为 `2` 或更大的整数时，最多允许相同数量的独立 API 请求同时进行。具体数值应根据
+模型服务吞吐和限流能力调整。LLM judge 使用独立的
+`evaluation.judge.concurrency` 配置，不受该字段控制。
+
 ##### 命令
 
 | 命令 | 用途 |

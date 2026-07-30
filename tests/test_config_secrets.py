@@ -10,7 +10,7 @@ from healthcorebench.config import (
     redact_config_for_persistence,
     resolve_api_key,
 )
-from healthcorebench.schemas.config import JudgeConfig, RunConfig
+from healthcorebench.schemas.config import JudgeConfig, RunConfig, RuntimeConfig
 import pytest
 
 
@@ -64,6 +64,13 @@ def test_environment_api_key_and_empty_fallback(monkeypatch):
 
     monkeypatch.delenv("MISSING_API_KEY", raising=False)
     assert resolve_api_key("MISSING_API_KEY") == "EMPTY"
+
+
+def test_runtime_concurrency_defaults_to_serial_and_rejects_zero():
+    assert RuntimeConfig().concurrency == 1
+    assert RuntimeConfig(concurrency=2).concurrency == 2
+    with pytest.raises(ValueError):
+        RuntimeConfig(concurrency=0)
 
 
 def test_judge_scoring_settings_are_part_of_resume_identity(tmp_path):

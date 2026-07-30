@@ -1,5 +1,10 @@
 """Integration tests for the Runner: concurrency, per-sample flush, resume, scoring."""
 
+import asyncio
+
+import pytest
+
+from healthcorebench.clients.openai_client import ModelResponse
 from healthcorebench.runtime.executor import Executor
 from healthcorebench.runtime.recorder import Recorder
 from healthcorebench.runtime.retry import RetryPolicy
@@ -8,16 +13,17 @@ from healthcorebench.runtime.resume import ResumeIndex
 from healthcorebench.schemas.config import GenerationConfig, MediaConfig, OutputConfig
 from healthcorebench.schemas.judgment import JudgmentRecord
 from healthcorebench.utils.jsonl import read_jsonl
+from healthcorebench.utils.timestamps import utc_now_iso
 from tests.mock_client import MockClient
 
 
-def _make(tmp_path, client, score_fn=None, resume_index=None):
+def _make(tmp_path, client, score_fn=None, resume_index=None, concurrency=4):
     rec = Recorder(tmp_path)
     ex = Executor(client=client, run_id="run1", provider="mock",
                   generation=GenerationConfig(), media=MediaConfig(), output=OutputConfig(),
                   retry_policy=RetryPolicy(max_retries=1, initial_seconds=0.001, max_seconds=0.01),
                   recorder=rec)
-    runner = Runner(executor=ex, recorder=rec, concurrency=4, score_fn=score_fn,
+    runner = Runner(executor=ex, recorder=rec, concurrency=concurrency, score_fn=score_fn,
                     resume_index=resume_index or ResumeIndex())
     return runner, rec
 
@@ -28,6 +34,44 @@ def _samples(n):
          "benchmark_split": "test", "reference_answer": "A", "logical_messages": [{"role": "user", "content": f"Q{i}"}]}
         for i in range(n)
     ]
+
+
+class _ConcurrencyProbeClient:
+    """Keep calls open briefly so the Runner's real in-flight request count is observable."""
+
+    requested_model_name = "probe-model"
+
+    def __init__(self) -> None:
+        self.active = 0
+        self.peak = 0
+
+    async def chat_completion(self, messages, **kwargs):
+        self.active += 1
+        self.peak = max(self.peak, self.active)
+        try:
+            await asyncio.sleep(0.02)
+        finally:
+            self.active -= 1
+        now = utc_now_iso()
+        return ModelResponse(
+            content="A", model_requested=self.requested_model_name,
+            model_returned=self.requested_model_name, finish_reason="stop",
+            request_start_time=now, request_end_time=now, latency_seconds=0.02,
+            raw_response={"choices": [{"message": {"content": "A"}}]},
+        )
+
+
+@pytest.mark.parametrize(("concurrency", "expected_peak"), [(1, 1), (3, 3)])
+async def test_runtime_concurrency_controls_in_flight_model_requests(
+    tmp_path, concurrency, expected_peak,
+):
+    client = _ConcurrencyProbeClient()
+    runner, _ = _make(tmp_path, client, concurrency=concurrency)
+
+    report = await runner.run(_samples(6))
+
+    assert report["counts"]["succeeded"] == 6
+    assert client.peak == expected_peak
 
 
 async def test_runner_runs_all_and_flushes(tmp_path):

@@ -39,7 +39,7 @@ generation:
   context_token_reserve: 512
 
 runtime:
-  concurrency: 8
+  concurrency: 1                  # 1 = serial; set to 2 or more for concurrent requests
   max_retries: 3                   # retries for retryable errors (timeout / 5xx / rate limit)
   same_budget_error_retries: 2     # same-tier retries; retryable errors only
   transient_error_ladder_steps: 2  # tiers a timeout/5xx may walk; context errors are unlimited

@@ -199,3 +199,14 @@ def test_retry_failed_flag_overrides_only_when_passed():
 
     without = parser.parse_args(["run", "--config", "x.yaml"])
     assert "runtime.retry_failed" not in _overrides_from_args(without)
+
+
+def test_concurrency_override_preserves_zero_for_schema_validation():
+    """Invalid zero must reach RunConfig instead of silently falling back to the YAML value."""
+    from healthcorebench.cli import _overrides_from_args, build_parser
+
+    args = build_parser().parse_args([
+        "run", "--config", "x.yaml", "--concurrency", "0",
+    ])
+
+    assert _overrides_from_args(args)["runtime.concurrency"] == 0

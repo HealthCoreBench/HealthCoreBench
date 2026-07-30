@@ -12,6 +12,7 @@ from healthcorebench.evaluators import get_evaluator, select_evaluator_name
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+CONFIG_DIR = PROJECT_ROOT / "configs"
 # The output-budget ladder every shipped config shares. The first entry is also each config's
 # generation.max_tokens, so the run starts at the top of its own ladder. The tiers above 8192
 # (262144/64000/32000/12800) were removed because both served endpoints reject or time out on
@@ -86,6 +87,17 @@ def _experiment_ids_are_consistent(config, prefix: str) -> None:
     """
     assert config.experiment.experiment_id.startswith(prefix), config.experiment.experiment_id
     assert config.experiment.run_name == f"all_{config.experiment.experiment_id}"
+
+
+def test_every_shipped_config_declares_serial_request_concurrency() -> None:
+    """Every operation file exposes the request-worker setting instead of hiding a default."""
+    config_paths = sorted(CONFIG_DIR.glob("*.yaml"))
+    assert config_paths
+    for path in config_paths:
+        text = path.read_text(encoding="utf-8")
+        assert "runtime:" in text, path.name
+        assert "concurrency:" in text, path.name
+        assert load_config(path).runtime.concurrency == 1, path.name
 
 
 def test_all_text_config_matches_registry() -> None:
@@ -190,7 +202,7 @@ def test_all_multimodal_config_matches_registry() -> None:
     assert configured == _implemented_keys("Multimodal")
     assert len(configured) == 56
     assert not configured & _implemented_keys("Language")
-    assert config.runtime.concurrency == 8
+    assert config.runtime.concurrency == 1
     assert config.runtime.request_timeout_seconds == 300
     assert config.runtime.same_budget_error_retries == 2
     assert config.generation.max_tokens == TOKEN_BUDGET_LADDER[0]
@@ -218,7 +230,7 @@ def test_strict_multimodal_config_contains_only_deterministically_scored_tasks()
     assert set(configured) <= set(_configured_keys(load_config(MULTIMODAL_CONFIG)))
     assert config.evaluation.use_llm_judge is False
     assert config.evaluation.judge is None
-    assert config.runtime.concurrency == 8
+    assert config.runtime.concurrency == 1
     assert config.runtime.request_timeout_seconds == 300
     assert config.model.api_key is not None
     assert config.generation.max_tokens == TOKEN_BUDGET_LADDER[0]

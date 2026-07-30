@@ -44,7 +44,7 @@ generation:
   context_token_reserve: 512          # 为聊天模板和估算误差保留 token
 
 runtime:
-  concurrency: 16            # 并发请求数;根据 GPU 显存/服务吞吐调整(8-32)
+  concurrency: 1             # 1 为串行;设置为 2 或更大时并发请求,上限按服务吞吐调整
   max_retries: 3             # 可重试错误(超时/5xx/限流)的重试次数
   same_budget_error_retries: 2  # 同档重试次数;仅对可重试错误生效
   transient_error_ladder_steps: 2  # 超时/5xx 最多下降几档;上下文错误不受此限制

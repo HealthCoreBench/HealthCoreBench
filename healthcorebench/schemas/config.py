@@ -84,7 +84,9 @@ class GenerationConfig(_Base):
 
 
 class RuntimeConfig(_Base):
-    concurrency: int = Field(default=16, ge=1)
+    # Maximum number of evaluated-model requests in flight. One worker is strictly serial;
+    # larger values let the async request workers overlap independent API calls.
+    concurrency: int = Field(default=1, ge=1)
     request_timeout_seconds: float = Field(default=180.0, gt=0)
     max_retries: int = Field(default=5, ge=0)
     same_budget_error_retries: int = Field(default=2, ge=0)

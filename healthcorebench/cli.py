@@ -28,7 +28,10 @@ def _add_common_overrides(p):
     p.add_argument("--split", help="override benchmark.split")
     p.add_argument("--model", help="override model.requested_model_name")
     p.add_argument("--base-url", help="override model.base_url")
-    p.add_argument("--concurrency", type=int, help="override runtime.concurrency")
+    p.add_argument(
+        "--concurrency", type=int,
+        help="override runtime.concurrency (1 = serial, greater than 1 = concurrent requests)",
+    )
     p.add_argument("--max-samples", type=int, help="override benchmark.max_samples")
     p.add_argument(
         "--retry-failed", action="store_true", default=None,
@@ -48,7 +51,7 @@ def _overrides_from_args(args) -> dict:
         ov["model.requested_model_name"] = args.model
     if getattr(args, "base_url", None):
         ov["model.base_url"] = args.base_url
-    if getattr(args, "concurrency", None):
+    if getattr(args, "concurrency", None) is not None:
         ov["runtime.concurrency"] = args.concurrency
     if getattr(args, "max_samples", None) is not None:
         ov["benchmark.max_samples"] = args.max_samples
