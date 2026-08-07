@@ -96,11 +96,15 @@ class Runner:
                             skip=counts["skipped"], refresh=False)
             bar.update(1)
 
-        async def handle(sample: dict, repeat: int):
+        async def handle(
+            sample: dict,
+            repeat: int,
+            logical_messages: list[dict] | None = None,
+        ) -> ResultRecord | None:
             try:
                 if self._stop.is_set():
                     counts["skipped"] += 1
-                    return
+                    return None
                 sid = sample["sample_id"]
                 # --- resume: skip completed inference ---
                 if self.resume_index.has_success(sid, repeat):
@@ -109,13 +113,15 @@ class Runner:
                     counts["scored"] += backfill["scored"]
                     counts["evaluation_failed"] += backfill["evaluation_failed"]
                     counts["missing_scoring"] += backfill["missing_scoring"]
-                    return
+                    stored = self.resume_index.result_for(sid, repeat)
+                    return ResultRecord.model_validate(stored) if stored else None
                 if self.resume_index.has_failure(sid, repeat) and not self.retry_failed:
                     counts["skipped"] += 1
-                    return
+                    stored = self.resume_index.result_for(sid, repeat)
+                    return ResultRecord.model_validate(stored) if stored else None
 
                 counts["attempted"] += 1
-                logical = sample["logical_messages"]
+                logical = logical_messages if logical_messages is not None else sample["logical_messages"]
                 try:
                     result = await self.executor.execute(sample, logical, repeat)
                 except Exception as exc:
@@ -149,8 +155,26 @@ class Runner:
                     counts["failed"] += 1
                 # A persistence failure is fatal and propagates out of the worker pool.
                 self.recorder.record_result(result)
+                return result
             finally:
                 _tick()
+
+        async def run_case_sequentially(case_samples: list[dict]) -> None:
+            """Run one case in stage order, carrying model responses into later turns."""
+            for repeat in range(self.n_repeats):
+                history: list[dict] = []
+                for sample in case_samples:
+                    if self._stop.is_set():
+                        return
+                    current_messages = [*history, *sample["logical_messages"]]
+                    result = await handle(sample, repeat, current_messages)
+                    # A later LiveClin stage is meaningful only when the previous turn actually
+                    # returned an answer. Transport/build failures stop this case; they are not
+                    # converted into incorrect judgments for the unrequested later stages.
+                    if result is None or result.status != "success" or result.raw_response is None:
+                        return
+                    history.extend(sample["logical_messages"])
+                    history.append({"role": "assistant", "content": result.raw_response})
 
         queue: asyncio.Queue = asyncio.Queue(maxsize=max(self.concurrency * 4, 1))
         sentinel = object()
@@ -161,8 +185,11 @@ class Runner:
                 try:
                     if item is sentinel:
                         return
-                    sample, repeat = item
-                    await handle(sample, repeat)
+                    if self._uses_case_sequential_protocol(samples):
+                        await run_case_sequentially(item)
+                    else:
+                        sample, repeat = item
+                        await handle(sample, repeat)
                 finally:
                     queue.task_done()
 
@@ -170,13 +197,19 @@ class Runner:
             async with asyncio.TaskGroup() as group:
                 for _ in range(self.concurrency):
                     group.create_task(worker())
-                for sample in samples:
-                    for repeat in range(self.n_repeats):
+                if self._uses_case_sequential_protocol(samples):
+                    for case_samples in self._case_groups(samples):
                         if self._stop.is_set():
                             break
-                        await queue.put((sample, repeat))
-                    if self._stop.is_set():
-                        break
+                        await queue.put(case_samples)
+                else:
+                    for sample in samples:
+                        for repeat in range(self.n_repeats):
+                            if self._stop.is_set():
+                                break
+                            await queue.put((sample, repeat))
+                        if self._stop.is_set():
+                            break
                 for _ in range(self.concurrency):
                     await queue.put(sentinel)
         except* ScoringUnavailableError as unavailable:
@@ -187,6 +220,42 @@ class Runner:
                 bar.close()
 
         return {"counts": counts, "interrupted": self._interrupted}
+
+    @staticmethod
+    def _uses_case_sequential_protocol(samples: list[dict]) -> bool:
+        """Return whether the selected samples opt into case-level multi-turn execution."""
+        return bool(samples) and all(
+            (sample.get("metadata") or {}).get("conversation_mode") == "case_sequential"
+            for sample in samples
+        )
+
+    @staticmethod
+    def _case_groups(samples: list[dict]) -> list[list[dict]]:
+        """Group opt-in samples by source case and preserve their stage order."""
+        groups: dict[tuple, list[dict]] = {}
+        for sample in samples:
+            metadata = sample.get("metadata") or {}
+            case_id = metadata.get("case_id")
+            if case_id in (None, ""):
+                key = (sample.get("sample_id"),)
+            else:
+                # Include the source row so a malformed/reused case label cannot merge unrelated
+                # source records into one conversation.
+                key = (
+                    sample.get("source_file"),
+                    sample.get("source_record_index"),
+                    str(case_id),
+                )
+            groups.setdefault(key, []).append(sample)
+
+        def stage_key(sample: dict) -> tuple[int, int]:
+            value = (sample.get("metadata") or {}).get("stage_index")
+            try:
+                return 0, int(value)
+            except (TypeError, ValueError):
+                return 1, int(sample.get("sample_index", 0))
+
+        return [sorted(case_samples, key=stage_key) for case_samples in groups.values()]
 
     @staticmethod
     def _make_bar(desc: str | None, total: int):

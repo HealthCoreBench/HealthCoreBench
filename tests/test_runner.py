@@ -5,6 +5,7 @@ import asyncio
 import pytest
 
 from healthcorebench.clients.openai_client import ModelResponse
+from healthcorebench.clients.errors import ErrorType
 from healthcorebench.runtime.executor import Executor
 from healthcorebench.runtime.recorder import Recorder
 from healthcorebench.runtime.retry import RetryPolicy
@@ -14,7 +15,7 @@ from healthcorebench.schemas.config import GenerationConfig, MediaConfig, Output
 from healthcorebench.schemas.judgment import JudgmentRecord
 from healthcorebench.utils.jsonl import read_jsonl
 from healthcorebench.utils.timestamps import utc_now_iso
-from tests.mock_client import MockClient
+from tests.mock_client import MockClient, err
 
 
 def _make(tmp_path, client, score_fn=None, resume_index=None, concurrency=4):
@@ -61,6 +62,42 @@ class _ConcurrencyProbeClient:
         )
 
 
+class _MessageRecordingClient(MockClient):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.messages = []
+
+    async def chat_completion(self, messages, **kwargs):
+        self.messages.append(messages)
+        return await super().chat_completion(messages, **kwargs)
+
+
+def _liveclin_samples(*, include_second_case: bool = True):
+    samples = []
+    for case_index, case_id in enumerate(("case-a", "case-b")):
+        if case_index == 1 and not include_second_case:
+            break
+        for stage_index in range(2):
+            samples.append({
+                "sample_id": f"urn:{case_id}:q{stage_index}",
+                "sample_index": len(samples),
+                "benchmark_name": "LiveClin",
+                "benchmark_split": "test",
+                "source_file": "liveclin.json",
+                "source_record_index": case_index,
+                "metadata": {
+                    "conversation_mode": "case_sequential",
+                    "case_id": case_id,
+                    "stage_index": stage_index,
+                },
+                "reference_answer": "A",
+                "logical_messages": [{
+                    "role": "user", "content": f"{case_id}:q{stage_index}",
+                }],
+            })
+    return samples
+
+
 @pytest.mark.parametrize(("concurrency", "expected_peak"), [(1, 1), (3, 3)])
 async def test_runtime_concurrency_controls_in_flight_model_requests(
     tmp_path, concurrency, expected_peak,
@@ -72,6 +109,64 @@ async def test_runtime_concurrency_controls_in_flight_model_requests(
 
     assert report["counts"]["succeeded"] == 6
     assert client.peak == expected_peak
+
+
+async def test_case_sequential_protocol_carries_history_and_isolates_cases(tmp_path):
+    client = _MessageRecordingClient(
+        behaviours=[
+            {"content": "A0"}, {"content": "A1"},
+            {"content": "B0"}, {"content": "B1"},
+        ]
+    )
+    runner, _ = _make(tmp_path, client, concurrency=1)
+
+    report = await runner.run(_liveclin_samples())
+
+    assert report["counts"]["succeeded"] == 4
+    assert [[message["role"] for message in request] for request in client.messages] == [
+        ["user"], ["user", "assistant", "user"],
+        ["user"], ["user", "assistant", "user"],
+    ]
+    assert [message["content"] for message in client.messages[1]] == [
+        "case-a:q0", "A0", "case-a:q1",
+    ]
+    assert [message["content"] for message in client.messages[3]] == [
+        "case-b:q0", "B0", "case-b:q1",
+    ]
+
+
+async def test_case_sequential_resume_rebuilds_history_from_persisted_response(tmp_path):
+    first_client = _MessageRecordingClient(behaviours=[{"content": "A0"}])
+    first_runner, recorder = _make(tmp_path, first_client, concurrency=1)
+    await first_runner.run(_liveclin_samples(include_second_case=False)[:1])
+
+    resume_index = ResumeIndex.from_run_dir(tmp_path)
+    second_client = _MessageRecordingClient(behaviours=[{"content": "A1"}])
+    second_runner, _ = _make(
+        tmp_path, second_client, concurrency=1, resume_index=resume_index,
+    )
+    await second_runner.run(_liveclin_samples(include_second_case=False))
+
+    assert len(second_client.messages) == 1
+    assert [message["content"] for message in second_client.messages[0]] == [
+        "case-a:q0", "A0", "case-a:q1",
+    ]
+    assert len(read_jsonl(recorder.path("results.jsonl"))) == 2
+
+
+async def test_case_sequential_does_not_request_next_stage_without_previous_response(tmp_path):
+    client = _MessageRecordingClient(
+        behaviours=[err(ErrorType.AUTHENTICATION_ERROR, http_status=401)],
+    )
+    runner, recorder = _make(tmp_path, client, concurrency=1)
+
+    report = await runner.run(_liveclin_samples(include_second_case=False))
+
+    assert report["counts"]["failed"] == 1
+    assert client.calls == 1
+    assert len(client.messages) == 1
+    assert [message["content"] for message in client.messages[0]] == ["case-a:q0"]
+    assert len(read_jsonl(recorder.path("results.jsonl"))) == 1
 
 
 async def test_runner_runs_all_and_flushes(tmp_path):

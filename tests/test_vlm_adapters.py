@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import gc
+import itertools
 
 from healthcorebench.benchmarks.registry import get_adapter, get_registry
 from healthcorebench.benchmarks.vlm_adapters.catalog import VLM_TASK_SPECS
@@ -101,6 +102,26 @@ def test_every_vlm_task_loads_normalizes_and_scores_real_data() -> None:
         assert judgment.normalized_score is not None, task_key
         del adapter, sample, dumped, messages, evaluator, judgment
         gc.collect()
+
+
+def test_liveclin_places_case_context_only_on_the_first_turn() -> None:
+    adapter = get_adapter("LiveClin/mcqa")
+    raws = list(itertools.islice(
+        adapter.load_raw_samples(adapter.discover_source_files()), 2,
+    ))
+    assert len(raws) == 2
+    first = adapter.normalize_sample(raws[0], 0)
+    second = adapter.normalize_sample(raws[1], 1)
+
+    first_prompt = _prompt_text(adapter, first)
+    second_prompt = _prompt_text(adapter, second)
+    assert first.source_content["question"].startswith("Clinical scenario:")
+    assert not second.source_content["question"].startswith("Clinical scenario:")
+    assert "Clinical scenario:" in first_prompt
+    assert "Clinical scenario:" not in second_prompt
+    assert first.metadata["conversation_mode"] == "case_sequential"
+    assert second.metadata["conversation_mode"] == "case_sequential"
+    assert first.metadata["case_id"] == second.metadata["case_id"]
 
 
 def test_hlm_embedded_image_is_absent_from_persistence_hash_and_judge_prompt() -> None:

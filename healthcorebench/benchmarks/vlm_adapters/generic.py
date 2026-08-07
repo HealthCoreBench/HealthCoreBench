@@ -816,6 +816,13 @@ class MedicalVLMAdapter(BaseBenchmarkAdapter):
         self.task_key = entry.key
         self.spec: VLMTaskSpec = VLM_TASK_SPECS[self.task_key]
         self.benchmark_name = entry.benchmark_name
+        if self.task_key == "LiveClin/mcqa":
+            # The request protocol for LiveClin is case-level multi-turn. Keep this behavior
+            # versioned so runs produced by the former independent-question protocol cannot be
+            # resumed as if their later-stage prompts were compatible.
+            self.adapter_version = "1.6"
+            self.prompt_template_name = "liveclin_multiturn"
+            self.prompt_template_version = "1.0"
 
     def discover_source_files(self) -> list[Path]:
         if self.split != "test":
@@ -888,12 +895,14 @@ class MedicalVLMAdapter(BaseBenchmarkAdapter):
                         scenario_tables = list(policy.get("scenario_table_details") or [])
                         for stage_index, mcq in enumerate(policy.get("mcqs") or []):
                             expanded = dict(mcq)
-                            expanded["scenario"] = scenario
+                            expanded["scenario"] = scenario if stage_index == 0 else ""
                             expanded["image_details"] = [
-                                *scenario_images, *(mcq.get("image_details") or []),
+                                *(scenario_images if stage_index == 0 else []),
+                                *(mcq.get("image_details") or []),
                             ]
                             expanded["table_details"] = [
-                                *scenario_tables, *(mcq.get("table_details") or []),
+                                *(scenario_tables if stage_index == 0 else []),
+                                *(mcq.get("table_details") or []),
                             ]
                             expanded["case_metadata"] = {
                                 key: record.get(key) for key in ("pmc", "title", "Level1", "Level2", "Rarity", "ICD-10")
@@ -1071,6 +1080,7 @@ class MedicalVLMAdapter(BaseBenchmarkAdapter):
                 "case_id": (record.get("case_metadata") or {}).get("pmc"),
                 "stage_name": record.get("stage"),
                 "stage_index": raw_sample.get("sub_index"),
+                "conversation_mode": "case_sequential",
             })
         if self.task_key == "MX-CXR/grounding":
             metadata.update({
